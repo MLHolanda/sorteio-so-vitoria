@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
+
+function formatarTempo(totalSegundos) {
+  const m = Math.floor(totalSegundos / 60)
+  const s = totalSegundos % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 function App() {
   // Carrega os jogadores do computador (LocalStorage)
@@ -8,7 +14,27 @@ function App() {
     return salvos ? JSON.parse(salvos) : [];
   });
   
-  const [novoNome, setNovoNome] = useState('');
+  const [novoNome, setNovoNome] = useState('')
+
+  const [segundosCronometro, setSegundosCronometro] = useState(0)
+  const [cronometroRodando, setCronometroRodando] = useState(false)
+
+  useEffect(() => {
+    if (!cronometroRodando) return
+    const id = setInterval(() => {
+      setSegundosCronometro((t) => t + 1)
+    }, 1000)
+    return () => clearInterval(id)
+  }, [cronometroRodando])
+
+  const alternarCronometro = useCallback(() => {
+    setCronometroRodando((r) => !r)
+  }, [])
+
+  const zerarCronometro = useCallback(() => {
+    setCronometroRodando(false)
+    setSegundosCronometro(0)
+  }, [])
 
   // Salva no computador sempre que a lista mudar
   useEffect(() => {
@@ -65,6 +91,50 @@ function App() {
   return (
     <div className="container">
       <h1>⚽ Sorteio do Rachão</h1>
+
+      <section className="timer-card" aria-label="Cronômetro do jogo">
+        <div className="timer-card__header">
+          <span
+            className={
+              cronometroRodando
+                ? 'timer-card__badge timer-card__badge--on'
+                : segundosCronometro > 0
+                  ? 'timer-card__badge timer-card__badge--pause'
+                  : 'timer-card__badge'
+            }
+          >
+            {cronometroRodando
+              ? 'Em andamento'
+              : segundosCronometro > 0
+                ? 'Pausado'
+                : 'Pronto'}
+          </span>
+          <h2 className="timer-card__title">Tempo de jogo</h2>
+        </div>
+        <p
+          className="timer-card__display"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {formatarTempo(segundosCronometro)}
+        </p>
+        <div className="timer-card__actions">
+          <button
+            type="button"
+            className="timer-btn timer-btn--primary"
+            onClick={alternarCronometro}
+          >
+            {cronometroRodando ? 'Pausar' : 'Iniciar'}
+          </button>
+          <button
+            type="button"
+            className="timer-btn timer-btn--ghost"
+            onClick={zerarCronometro}
+          >
+            Zerar
+          </button>
+        </div>
+      </section>
       
       <div className="input-group">
         <input 

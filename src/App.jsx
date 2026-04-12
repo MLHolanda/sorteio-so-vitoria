@@ -63,7 +63,7 @@ function App() {
 
   return (
     <div className="container">
-      <h1>⚽ Sorteio do Rachão</h1>
+      <h1>⚽ Sorteio dos Times</h1>
 
       {/* SEÇÃO DO TIMER */}
       <div className="timer-box">

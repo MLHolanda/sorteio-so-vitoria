@@ -2,19 +2,39 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  // Carrega os jogadores do LocalStorage (Banco de Dados do Navegador)
+  // --- LÓGICA DO BANCO DE DADOS E JOGADORES ---
   const [jogadores, setJogadores] = useState(() => {
     const salvos = localStorage.getItem('banco_jogadores');
     return salvos ? JSON.parse(salvos) : [];
   });
-  
   const [novoNome, setNovoNome] = useState('');
+  const [timesSorteados, setTimesSorteados] = useState(null);
 
-  // Salva no computador sempre que a lista mudar
+  // --- LÓGICA DO TIMER ---
+  const [segundos, setSegundos] = useState(0);
+  const [timerAtivo, setTimerAtivo] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('banco_jogadores', JSON.stringify(jogadores));
   }, [jogadores]);
 
+  useEffect(() => {
+    let intervalo = null;
+    if (timerAtivo) {
+      intervalo = setInterval(() => setSegundos(s => s + 1), 1000);
+    } else {
+      clearInterval(intervalo);
+    }
+    return () => clearInterval(intervalo);
+  }, [timerAtivo]);
+
+  const formatarTempo = () => {
+    const m = Math.floor(segundos / 60).toString().padStart(2, '0');
+    const s = (segundos % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  // --- FUNÇÕES DE AÇÃO ---
   const adicionarJogador = () => {
     if (novoNome.trim() !== "") {
       setJogadores([...jogadores, { nome: novoNome, selecionado: false }]);
@@ -30,37 +50,30 @@ function App() {
 
   const sortearOsDez = () => {
     const presentes = jogadores.filter(j => j.selecionado);
-    
     if (presentes.length !== 10) {
-      alert(`Selecione exatamente 10 jogadores! (Você marcou ${presentes.length})`);
+      alert(`Selecione exatamente 10 jogadores! (Marcados: ${presentes.length})`);
       return;
     }
-
     const embaralhados = [...presentes].sort(() => Math.random() - 0.5);
-    const timeA = embaralhados.slice(0, 5);
-    const timeB = embaralhados.slice(5, 10);
-
-    alert(`⚽ TIME A: ${timeA.map(j => j.nome).join(', ')}\n\n⚽ TIME B: ${timeB.map(j => j.nome).join(', ')}`);
-  };
-
-  const desmarcarTodos = () => {
-    const resetados = jogadores.map(j => ({ ...j, selecionado: false }));
-    setJogadores(resetados);
-  };
-
-  const limparBanco = () => {
-    const senha = prompt("Atenção: Isso apagará TODOS os nomes. Digite a senha para confirmar:");
-    if (senha === "1020") {
-      setJogadores([]);
-      alert("Banco de dados limpo com sucesso!");
-    } else if (senha !== null) {
-      alert("Senha incorreta!");
-    }
+    setTimesSorteados({
+      timeA: embaralhados.slice(0, 5),
+      timeB: embaralhados.slice(5, 10)
+    });
   };
 
   return (
     <div className="container">
       <h1>⚽ Sorteio do Rachão</h1>
+
+      {/* SEÇÃO DO TIMER */}
+      <div className="timer-box">
+        <h2 className="display-timer">{formatarTempo()}</h2>
+        <div className="timer-btns">
+          <button onClick={() => setTimerAtivo(true)}>▶ Iniciar</button>
+          <button onClick={() => setTimerAtivo(false)}>⏸ Pausar</button>
+          <button onClick={() => {setTimerAtivo(false); setSegundos(0)}}>🔄 Zerar</button>
+        </div>
+      </div>
       
       <div className="input-group">
         <input 
@@ -71,6 +84,20 @@ function App() {
         />
         <button className="btn-add" onClick={adicionarJogador}>Cadastrar</button>
       </div>
+
+      {/* EXIBIÇÃO DOS TIMES SORTEADOS COM CORES */}
+      {timesSorteados && (
+        <div className="painel-times">
+          <div className="coluna-time time-azul">
+            <h3>Time Azul 🔵</h3>
+            {timesSorteados.timeA.map((j, i) => <p key={i}>{j.nome}</p>)}
+          </div>
+          <div className="coluna-time time-laranja">
+            <h3>Time Laranja 🟠</h3>
+            {timesSorteados.timeB.map((j, i) => <p key={i}>{j.nome}</p>)}
+          </div>
+        </div>
+      )}
 
       <h3>Quem chegou? (Marque 10)</h3>
       <div className="lista-banco">
@@ -86,17 +113,8 @@ function App() {
       </div>
 
       <div className="acoes">
-        <button className="btn-sortear" onClick={sortearOsDez}>
-          Sortear 2 Times de 5
-        </button>
-        
-        <button className="btn-reset" onClick={desmarcarTodos}>
-          Limpar Seleção
-        </button>
-
-        <button className="btn-limpar" onClick={limparBanco}>
-          Apagar Banco
-        </button>
+        <button className="btn-sortear" onClick={sortearOsDez}>Sortear Partida</button>
+        <button className="btn-reset" onClick={() => setJogadores(jogadores.map(j => ({ ...j, selecionado: false })))}>Limpar Seleção</button>
       </div>
     </div>
   )

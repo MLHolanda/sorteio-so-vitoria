@@ -18,7 +18,7 @@ function App() {
 
   const [segundosCronometro, setSegundosCronometro] = useState(0)
   const [cronometroRodando, setCronometroRodando] = useState(false)
-
+  const [timesSorteados, setTimesSorteados] = useState(null);
   useEffect(() => {
     if (!cronometroRodando) return
     const id = setInterval(() => {
@@ -56,17 +56,19 @@ function App() {
 
   const sortearOsDez = () => {
     const presentes = jogadores.filter(j => j.selecionado);
-    
+    //Verifique se você marcou 10 nomes na lista
     if (presentes.length !== 10) {
       alert(`Selecione exatamente 10 jogadores! (Você marcou ${presentes.length})`);
       return;
     }
+    const embaralhados = [...presentes].sort(() => Math.random() - 0.5);
+    //Esta linha é a mais importante: ela salva os times para o React mostrar
+    setTimesSorteados({
+        timeA : embaralhados.slice(0, 5),
+        timeB : embaralhados.slice(5, 10)
+    });
 
-    const embaralhados = presentes.sort(() => Math.random() - 0.5);
-    const timeA = embaralhados.slice(0, 5);
-    const timeB = embaralhados.slice(5, 10);
-
-    alert(`⚽ TIME A: ${timeA.map(j => j.nome).join(', ')}\n\n⚽ TIME B: ${timeB.map(j => j.nome).join(', ')}`);
+    //alert(`⚽ TIME A: ${timeA.map(j => j.nome).join(', ')}\n\n⚽ TIME B: ${timeB.map(j => j.nome).join(', ')}`);
   };
 
   const desmarcarTodos = () => {
@@ -90,7 +92,7 @@ function App() {
   
   return (
     <div className="container">
-      <h1>⚽ Sorteio do Rachão</h1>
+      <h1>⚽ Sorteio Só Vitória</h1>
 
       <section className="timer-card" aria-label="Cronômetro do jogo">
         <div className="timer-card__header">
@@ -135,7 +137,24 @@ function App() {
           </button>
         </div>
       </section>
-      
+      {/* Exibição dos Times Sorteados */}
+      {timesSorteados && (
+        <div className="painel-times">
+         <div className="coluna-time time-azul">
+          <h3>Time Azul 🔵</h3>
+          {timesSorteados.timeA.map((j, i) => (
+            <p key={i} className="nome-sorteado">{j.nome}</p>
+          ))}
+        </div>
+
+        <div className="coluna-time time-laranja">
+          <h3>Time Laranja 🟠</h3>
+          {timesSorteados.timeB.map((j, i) => (
+            <p key={i} className="nome-sorteado">{j.nome}</p>
+          ))}
+         </div>
+        </div>
+      )}
       <div className="input-group">
         <input 
           type="text" 

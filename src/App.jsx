@@ -92,7 +92,7 @@ function App() {
   
   return (
     <div className="container">
-      <h1>⚽ Sorteio Só Vitória</h1>
+      <h1>⚽ Sorteio Só Vitória Futebol</h1>
 
       <section className="timer-card" aria-label="Cronômetro do jogo">
         <div className="timer-card__header">

@@ -40,6 +40,8 @@ function carregarEstadoPartida() {
 
 function App() {
   const estadoInicialPartida = carregarEstadoPartida()
+  
+  // ESTADOS PRINCIPAIS
   const [jogadoresPorTime, setJogadoresPorTime] = useState(5)
   const [quantidadeTimes, setQuantidadeTimes] = useState(2)
   const [jogadores, setJogadores] = useState(() => {
@@ -57,8 +59,13 @@ function App() {
   const [placarAzul, setPlacarAzul] = useState(estadoInicialPartida.placarAzul)
   const [placarLaranja, setPlacarLaranja] = useState(estadoInicialPartida.placarLaranja)
 
+  // NOVOS ESTADOS PARA O PLACAR DINÂMICO
+  const [timeAtivoA, setTimeAtivoA] = useState(0)
+  const [timeAtivoB, setTimeAtivoB] = useState(1)
+
   const totalSelecionados = jogadores.filter((j) => j.selecionado).length
 
+  // SALVAMENTO AUTOMÁTICO
   useEffect(() => {
     localStorage.setItem('banco_jogadores', JSON.stringify(jogadores))
   }, [jogadores])
@@ -68,6 +75,7 @@ function App() {
     localStorage.setItem('estado_partida', JSON.stringify(estadoPartida))
   }, [segundosCronometro, timesSorteados, placarAzul, placarLaranja])
 
+  // LÓGICA DO CRONÔMETRO
   useEffect(() => {
     if (!cronometroRodando) return
     const intervalo = setInterval(() => {
@@ -79,6 +87,7 @@ function App() {
   const alternarCronometro = useCallback(() => setCronometroRodando(v => !v), [])
   const zerarCronometro = useCallback(() => { setCronometroRodando(false); setSegundosCronometro(0); }, [])
 
+  // AÇÕES DE JOGADORES
   const adicionarJogador = () => {
     const nomeLimpo = novoNome.trim()
     if (!nomeLimpo) { toast.error('Digite o nome.'); return; }
@@ -101,6 +110,7 @@ function App() {
     if (window.confirm('Excluir?')) setJogadores(lista => lista.filter(j => j.id !== id))
   }
 
+  // LÓGICA DE SORTEIO DINÂMICO
   const sortearTimes = () => {
     const presentes = jogadores.filter(j => j.selecionado)
     const totalNecessario = jogadoresPorTime * quantidadeTimes
@@ -111,6 +121,7 @@ function App() {
     const embaralhados = [...presentes].sort(() => Math.random() - 0.5)
     const novosTimes = []
     const cores = ['#3b82f6', '#f97316', '#ef4444', '#10b981']
+    
     for (let i = 0; i < quantidadeTimes; i++) {
       novosTimes.push({
         id: i,
@@ -120,18 +131,19 @@ function App() {
       })
     }
     setTimesSorteados(novosTimes)
+    setTimeAtivoA(0)
+    setTimeAtivoB(1)
     setPlacarAzul(0); setPlacarLaranja(0); zerarCronometro();
     toast.success('Sorteio realizado!')
   }
 
   const desmarcarTodos = () => setJogadores(l => l.map(j => ({ ...j, selecionado: false })))
-
+  
   const limparBanco = () => {
-    const senhaDigitada = prompt('Atenção: isso apagará tudo. Digite a senha:');
-    const senhaCorreta = import.meta.env.VITE_APP_PASSWORD;
-    if (senhaDigitada === senhaCorreta) {
+    const senhaDigitada = prompt('Senha (1020):');
+    if (senhaDigitada === import.meta.env.VITE_APP_PASSWORD) {
       setJogadores([]); setTimesSorteados(null); localStorage.clear();
-      toast.success('Banco apagado com sucesso.');
+      toast.success('Banco apagado.');
     } else {
       toast.error('Senha incorreta.');
     }
@@ -148,54 +160,102 @@ function App() {
 
         <section className="topo-grid">
           <div className="card">
-            <div className="card-topo"><span className={cronometroRodando ? 'badge ativo' : 'badge'}>{cronometroRodando ? 'Rodando' : 'Parado'}</span><h2>Cronômetro</h2></div>
+            <div className="card-topo">
+              <span className={cronometroRodando ? 'badge ativo' : 'badge'}>
+                {cronometroRodando ? 'Rodando' : 'Parado'}
+              </span>
+              <h2>Cronômetro</h2>
+            </div>
             <div className="timer-display">{formatarTempo(segundosCronometro)}</div>
             <div className="timer-actions">
               <button className="btn dark" onClick={alternarCronometro}>{cronometroRodando ? 'Pausar' : 'Iniciar'}</button>
               <button className="btn light" onClick={zerarCronometro}>Zerar</button>
             </div>
           </div>
+
           <div className="card">
-            <div className="card-topo"><span className="badge destaque">Placar</span><h2>Gols</h2></div>
+            <div className="card-topo"><span className="badge destaque">Placar</span><h2>Jogo atual</h2></div>
             <div className="placar">
-              <div className="placar-time azul"><h3>Azul</h3><strong>{placarAzul}</strong><button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button></div>
+              <div className="placar-time" style={{ borderBottom: `4px solid ${timesSorteados?.[timeAtivoA]?.cor || '#3b82f6'}` }}>
+                <select 
+                  className="select-placar" 
+                  value={timeAtivoA} 
+                  onChange={(e) => setTimeAtivoA(Number(e.target.value))}
+                >
+                  {timesSorteados ? timesSorteados.map(t => <option key={t.id} value={t.id}>{t.nome}</option>) : <option>Time 1</option>}
+                </select>
+                <strong>{placarAzul}</strong>
+                <button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button>
+              </div>
+
               <div className="placar-versus">x</div>
-              <div className="placar-time laranja"><h3>Laranja</h3><strong>{placarLaranja}</strong><button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button></div>
+
+              <div className="placar-time" style={{ borderBottom: `4px solid ${timesSorteados?.[timeAtivoB]?.cor || '#f97316'}` }}>
+                <select 
+                  className="select-placar" 
+                  value={timeAtivoB} 
+                  onChange={(e) => setTimeAtivoB(Number(e.target.value))}
+                >
+                  {timesSorteados ? timesSorteados.map(t => <option key={t.id} value={t.id}>{t.nome}</option>) : <option>Time 2</option>}
+                </select>
+                <strong>{placarLaranja}</strong>
+                <button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button>
+              </div>
             </div>
           </div>
         </section>
 
         {timesSorteados && (
-          <section className="times-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+          <section className="times-section">
             {Array.isArray(timesSorteados) ? timesSorteados.map(t => (
               <div key={t.id} className="time-card" style={{ borderTop: `5px solid ${t.cor}` }}>
                 <h3 style={{color: t.cor}}>{t.nome}</h3>
                 <ul>{t.jogadores.map(j => <li key={j.id}>{j.nome}</li>)}</ul>
               </div>
-            )) : <p>Refaça o sorteio para ver os times.</p>}
+            )) : <p>Refaça o sorteio.</p>}
           </section>
         )}
 
         <section className="card cadastro-card">
           <div className="input-group">
-            <input type="text" value={novoNome} onChange={e => setNovoNome(e.target.value)} placeholder="Nome do jogador" />
+            <input type="text" value={novoNome} onChange={e => setNovoNome(e.target.value)} onKeyDown={e => e.key === 'Enter' && adicionarJogador()} placeholder="Nome do jogador" />
             <button className="btn success" onClick={adicionarJogador}>Add</button>
           </div>
         </section>
 
         <section className="card banco-card">
-          <div className="card-topo"><span className="badge">{jogadores.length} no banco</span><h2>Jogadores</h2></div>
+          <div className="card-topo">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span className="badge destaque">
+                {totalSelecionados} selecionados
+              </span>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '8px' }}>
+                Total no banco: {jogadores.length}
+              </span>
+            </div>
+            <h2>Banco de jogadores</h2>
+          </div>
+
           <div className="lista-banco">
-            {jogadores.map(j => <PlayerCard key={j.id} jogador={j} aoAlternar={alternarPresenca} aoEditar={editarJogador} aoExcluir={excluirJogador} />)}
+            {jogadores.map((j) => (
+              <PlayerCard 
+                key={j.id} 
+                jogador={j} 
+                aoAlternar={alternarPresenca} 
+                aoEditar={editarJogador} 
+                aoExcluir={excluirJogador} 
+              />
+            ))}
           </div>
         </section>
+
 
         <section className="acoes-principais">
           <div className="config-box" style={{ background: '#1e293b', padding: '15px', borderRadius: '12px', marginBottom: '15px' }}>
             <div style={{marginBottom: '10px'}}>
               <span>Jogadores por time: </span>
               <select value={jogadoresPorTime} onChange={e => setJogadoresPorTime(Number(e.target.value))}>
-                {[5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}</option>)}
+                {[5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n} x {n}</option>)}
               </select>
             </div>
             <div>

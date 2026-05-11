@@ -177,3 +177,36 @@ body {
   .topo-grid { grid-template-columns: 1fr; }
   .placar-time strong { font-size: 2rem; }
 }
+/* Garante que o contador de jogadores e o título não se batam em telas pequenas */
+.card-topo {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Estilo para a badge de contagem (deixando-a mais viva) */
+.badge.destaque {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+/* Melhora a visibilidade do Cronômetro */
+.timer-display {
+  font-family: 'Courier New', Courier, monospace; /* Estilo digital */
+  font-size: 3.5rem;
+  color: #38bdf8;
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+  margin: 15px 0;
+}
+
+/* Estilo para as caixas de configuração (Jogadores por time / Quantidade de times) */
+.config-box select {
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 5px;
+  margin-left: 10px;
+  cursor: pointer;
+}

@@ -65,7 +65,7 @@ function App() {
 
   useEffect(() => {
     const estadoPartida = { segundosCronometro, timesSorteados, placarAzul, placarLaranja }
-    localStorage.setItem('estado_part_v2', JSON.stringify(estadoPartida))
+    localStorage.setItem('estado_partida', JSON.stringify(estadoPartida))
   }, [segundosCronometro, timesSorteados, placarAzul, placarLaranja])
 
   useEffect(() => {
@@ -111,7 +111,6 @@ function App() {
     const embaralhados = [...presentes].sort(() => Math.random() - 0.5)
     const novosTimes = []
     const cores = ['#3b82f6', '#f97316', '#ef4444', '#10b981']
-    
     for (let i = 0; i < quantidadeTimes; i++) {
       novosTimes.push({
         id: i,
@@ -126,10 +125,15 @@ function App() {
   }
 
   const desmarcarTodos = () => setJogadores(l => l.map(j => ({ ...j, selecionado: false })))
-  
+
   const limparBanco = () => {
-    if (prompt('Senha 1020:') === '1020') {
+    const senhaDigitada = prompt('Atenção: isso apagará tudo. Digite a senha:');
+    const senhaCorreta = import.meta.env.VITE_APP_PASSWORD;
+    if (senhaDigitada === senhaCorreta) {
       setJogadores([]); setTimesSorteados(null); localStorage.clear();
+      toast.success('Banco apagado com sucesso.');
+    } else {
+      toast.error('Senha incorreta.');
     }
   }
 
@@ -144,20 +148,20 @@ function App() {
 
         <section className="topo-grid">
           <div className="card">
-             <div className="card-topo"><span className={cronometroRodando ? 'badge ativo' : 'badge'}>{cronometroRodando ? 'Rodando' : 'Parado'}</span><h2>Cronômetro</h2></div>
-             <div className="timer-display">{formatarTempo(segundosCronometro)}</div>
-             <div className="timer-actions">
-                <button className="btn dark" onClick={alternarCronometro}>{cronometroRodando ? 'Pausar' : 'Iniciar'}</button>
-                <button className="btn light" onClick={zerarCronometro}>Zerar</button>
-             </div>
+            <div className="card-topo"><span className={cronometroRodando ? 'badge ativo' : 'badge'}>{cronometroRodando ? 'Rodando' : 'Parado'}</span><h2>Cronômetro</h2></div>
+            <div className="timer-display">{formatarTempo(segundosCronometro)}</div>
+            <div className="timer-actions">
+              <button className="btn dark" onClick={alternarCronometro}>{cronometroRodando ? 'Pausar' : 'Iniciar'}</button>
+              <button className="btn light" onClick={zerarCronometro}>Zerar</button>
+            </div>
           </div>
           <div className="card">
-             <div className="card-topo"><span className="badge destaque">Placar</span><h2>Gols</h2></div>
-             <div className="placar">
-                <div className="placar-time azul"><h3>Azul</h3><strong>{placarAzul}</strong><button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button></div>
-                <div className="placar-versus">x</div>
-                <div className="placar-time laranja"><h3>Laranja</h3><strong>{placarLaranja}</strong><button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button></div>
-             </div>
+            <div className="card-topo"><span className="badge destaque">Placar</span><h2>Gols</h2></div>
+            <div className="placar">
+              <div className="placar-time azul"><h3>Azul</h3><strong>{placarAzul}</strong><button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button></div>
+              <div className="placar-versus">x</div>
+              <div className="placar-time laranja"><h3>Laranja</h3><strong>{placarLaranja}</strong><button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button></div>
+            </div>
           </div>
         </section>
 
@@ -211,4 +215,5 @@ function App() {
     </div>
   )
 }
+
 export default App

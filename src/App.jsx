@@ -60,6 +60,7 @@ function App() {
 
   const [timeAtivoA, setTimeAtivoA] = useState(0)
   const [timeAtivoB, setTimeAtivoB] = useState(1)
+  const [tempoLimiteMinutos, setTempoLimiteMinutos] = useState(10)
 
   const totalSelecionados = jogadores.filter((j) => j.selecionado).length
 
@@ -73,14 +74,56 @@ function App() {
   }, [segundosCronometro, timesSorteados, placarAzul, placarLaranja])
 
   useEffect(() => {
-    if (!cronometroRodando) return
-    const intervalo = setInterval(() => {
-      setSegundosCronometro((tempo) => tempo + 1)
-    }, 1000)
-    return () => clearInterval(intervalo)
-  }, [cronometroRodando])
+    if (!cronometroRodando) return;
 
-  const alternarCronometro = useCallback(() => setCronometroRodando(v => !v), [])
+    const limiteSegundos = tempoLimiteMinutos * 60;
+
+    if (segundosCronometro >= limiteSegundos) {
+      setCronometroRodando(false);
+      
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          const audioCtx = new AudioContextClass();
+          [0, 0.2].forEach((delay) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime + delay);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + delay);
+            osc.stop(audioCtx.currentTime + delay + 0.3);
+          });
+        }
+      } catch (e) { 
+        console.log("Audio falhou", e); 
+      }
+
+      toast.success('⏱️ Fim de jogo! Tempo esgotado!', { duration: 5000 });
+      return;
+    }
+
+    const intervalo = setInterval(() => {
+      setSegundosCronometro((tempo) => tempo + 1);
+    }, 1000);
+
+    return () => clearInterval(intervalo);
+  }, [cronometroRodando, segundosCronometro, tempoLimiteMinutos]);
+
+  const alternarCronometro = useCallback(() => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    } catch (e) { console.log(e); }
+    
+    setCronometroRodando(v => !v);
+  }, []);
+
   const zerarCronometro = useCallback(() => { setCronometroRodando(false); setSegundosCronometro(0); }, [])
 
   const adicionarJogador = () => {
@@ -132,16 +175,6 @@ function App() {
   }
 
   const desmarcarTodos = () => setJogadores(l => l.map(j => ({ ...j, selecionado: false })))
-  
-  const limparBanco = () => {
-    const senhaDigitada = prompt('Senha (1020):');
-    if (senhaDigitada === import.meta.env.VITE_APP_PASSWORD) {
-      setJogadores([]); setTimesSorteados(null); localStorage.clear();
-      toast.success('Banco apagado.');
-    } else {
-      toast.error('Senha incorreta.');
-    }
-  }
 
   return (
     <div className="app">
@@ -160,7 +193,22 @@ function App() {
               </span>
               <h2>Cronômetro</h2>
             </div>
+            
             <div className="timer-display">{formatarTempo(segundosCronometro)}</div>
+            
+            <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
+              <span>Duração:</span>
+              <select 
+                value={tempoLimiteMinutos} 
+                onChange={(e) => setTempoLimiteMinutos(Number(e.target.value))}
+                style={{ background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                {[1, 2, 5, 8, 10, 12, 15, 20].map(min => (
+                  <option key={min} value={min}>{min} min</option>
+                ))}
+              </select>
+            </div>
+
             <div className="timer-actions">
               <button className="btn dark" onClick={alternarCronometro}>{cronometroRodando ? 'Pausar' : 'Iniciar'}</button>
               <button className="btn light" onClick={zerarCronometro}>Zerar</button>
@@ -204,6 +252,7 @@ function App() {
             </div>
           </div>
         </section>
+
         {timesSorteados && (
           <section className="times-section">
             {Array.isArray(timesSorteados) ? timesSorteados.map(t => (
@@ -269,9 +318,8 @@ function App() {
             </div>
           </div>
           <button className="btn principal" onClick={sortearTimes} style={{ width: '100%' }}>Sortear Equipes</button>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', marginTop: '10px' }}>
             <button className="btn secondary" onClick={desmarcarTodos} style={{ flex: 1 }}>Limpar Seleção</button>
-            <button className="btn danger" onClick={limparBanco} style={{ flex: 1 }}>Apagar Banco</button>
           </div>
         </section>
       </div>

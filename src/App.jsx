@@ -41,7 +41,6 @@ function carregarEstadoPartida() {
 function App() {
   const estadoInicialPartida = carregarEstadoPartida()
   
-  // ESTADOS PRINCIPAIS
   const [jogadoresPorTime, setJogadoresPorTime] = useState(5)
   const [quantidadeTimes, setQuantidadeTimes] = useState(2)
   const [jogadores, setJogadores] = useState(() => {
@@ -59,13 +58,11 @@ function App() {
   const [placarAzul, setPlacarAzul] = useState(estadoInicialPartida.placarAzul)
   const [placarLaranja, setPlacarLaranja] = useState(estadoInicialPartida.placarLaranja)
 
-  // NOVOS ESTADOS PARA O PLACAR DINÂMICO
   const [timeAtivoA, setTimeAtivoA] = useState(0)
   const [timeAtivoB, setTimeAtivoB] = useState(1)
 
   const totalSelecionados = jogadores.filter((j) => j.selecionado).length
 
-  // SALVAMENTO AUTOMÁTICO
   useEffect(() => {
     localStorage.setItem('banco_jogadores', JSON.stringify(jogadores))
   }, [jogadores])
@@ -75,7 +72,6 @@ function App() {
     localStorage.setItem('estado_partida', JSON.stringify(estadoPartida))
   }, [segundosCronometro, timesSorteados, placarAzul, placarLaranja])
 
-  // LÓGICA DO CRONÔMETRO
   useEffect(() => {
     if (!cronometroRodando) return
     const intervalo = setInterval(() => {
@@ -87,7 +83,6 @@ function App() {
   const alternarCronometro = useCallback(() => setCronometroRodando(v => !v), [])
   const zerarCronometro = useCallback(() => { setCronometroRodando(false); setSegundosCronometro(0); }, [])
 
-  // AÇÕES DE JOGADORES
   const adicionarJogador = () => {
     const nomeLimpo = novoNome.trim()
     if (!nomeLimpo) { toast.error('Digite o nome.'); return; }
@@ -110,7 +105,6 @@ function App() {
     if (window.confirm('Excluir?')) setJogadores(lista => lista.filter(j => j.id !== id))
   }
 
-  // LÓGICA DE SORTEIO DINÂMICO
   const sortearTimes = () => {
     const presentes = jogadores.filter(j => j.selecionado)
     const totalNecessario = jogadoresPorTime * quantidadeTimes
@@ -185,7 +179,10 @@ function App() {
                   {timesSorteados ? timesSorteados.map(t => <option key={t.id} value={t.id}>{t.nome}</option>) : <option>Time 1</option>}
                 </select>
                 <strong>{placarAzul}</strong>
-                <button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button className="btn mini" onClick={() => setPlacarAzul(v => Math.max(0, v - 1))} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>-</button>
+                  <button className="btn mini" onClick={() => setPlacarAzul(v => v + 1)}>+</button>
+                </div>
               </div>
 
               <div className="placar-versus">x</div>
@@ -199,17 +196,19 @@ function App() {
                   {timesSorteados ? timesSorteados.map(t => <option key={t.id} value={t.id}>{t.nome}</option>) : <option>Time 2</option>}
                 </select>
                 <strong>{placarLaranja}</strong>
-                <button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button className="btn mini" onClick={() => setPlacarLaranja(v => Math.max(0, v - 1))} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>-</button>
+                  <button className="btn mini" onClick={() => setPlacarLaranja(v => v + 1)}>+</button>
+                </div>
               </div>
             </div>
           </div>
         </section>
-
         {timesSorteados && (
           <section className="times-section">
             {Array.isArray(timesSorteados) ? timesSorteados.map(t => (
               <div key={t.id} className="time-card" style={{ borderTop: `5px solid ${t.cor}` }}>
-                <h3 style={{color: t.cor}}>{t.nome}</h3>
+                <h3 style={{ color: t.cor }}>{t.nome}</h3>
                 <ul>{t.jogadores.map(j => <li key={j.id}>{j.nome}</li>)}</ul>
               </div>
             )) : <p>Refaça o sorteio.</p>}
@@ -238,37 +237,41 @@ function App() {
 
           <div className="lista-banco">
             {jogadores.map((j) => (
-              <PlayerCard 
+              <div 
                 key={j.id} 
-                jogador={j} 
-                aoAlternar={alternarPresenca} 
-                aoEditar={editarJogador} 
-                aoExcluir={excluirJogador} 
-              />
+                className={`player-card-wrapper ${j.selecionado ? 'custom-selecionado' : ''}`}
+                style={j.selecionado ? { background: '#10b981', borderRadius: '12px', padding: '3px', transition: 'all 0.2s ease' } : {}}
+              >
+                <PlayerCard 
+                  jogador={j} 
+                  aoAlternar={alternarPresenca} 
+                  aoEditar={editarJogador} 
+                  aoExcluir={excluirJogador} 
+                />
+              </div>
             ))}
           </div>
         </section>
 
-
         <section className="acoes-principais">
           <div className="config-box" style={{ background: '#1e293b', padding: '15px', borderRadius: '12px', marginBottom: '15px' }}>
-            <div style={{marginBottom: '10px'}}>
+            <div style={{ marginBottom: '10px' }}>
               <span>Jogadores por time: </span>
               <select value={jogadoresPorTime} onChange={e => setJogadoresPorTime(Number(e.target.value))}>
-                {[5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n} x {n}</option>)}
+                {[5, 6, 7, 8, 9, 10, 11, 12].map(n => <option key={n} value={n}>{n} x {n}</option>)}
               </select>
             </div>
             <div>
               <span>Quantidade de times: </span>
               <select value={quantidadeTimes} onChange={e => setQuantidadeTimes(Number(e.target.value))}>
-                {[2,3,4].map(n => <option key={n} value={n}>{n} Equipes</option>)}
+                {[2, 3, 4].map(n => <option key={n} value={n}>{n} Equipes</option>)}
               </select>
             </div>
           </div>
-          <button className="btn principal" onClick={sortearTimes} style={{width: '100%'}}>Sortear Equipes</button>
-          <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
-            <button className="btn secondary" onClick={desmarcarTodos} style={{flex:1}}>Limpar Seleção</button>
-            <button className="btn danger" onClick={limparBanco} style={{flex:1}}>Apagar Banco</button>
+          <button className="btn principal" onClick={sortearTimes} style={{ width: '100%' }}>Sortear Equipes</button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button className="btn secondary" onClick={desmarcarTodos} style={{ flex: 1 }}>Limpar Seleção</button>
+            <button className="btn danger" onClick={limparBanco} style={{ flex: 1 }}>Apagar Banco</button>
           </div>
         </section>
       </div>

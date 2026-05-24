@@ -73,56 +73,82 @@ function App() {
     localStorage.setItem('estado_partida', JSON.stringify(estadoPartida))
   }, [segundosCronometro, timesSorteados, placarAzul, placarLaranja])
 
-  useEffect(() => {
-    if (!cronometroRodando) return;
-
-    const limiteSegundos = tempoLimiteMinutos * 60;
-
-    if (segundosCronometro >= limiteSegundos) {
-      setCronometroRodando(false);
-      
-      try {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-          const audioCtx = new AudioContextClass();
-          [0, 0.2].forEach((delay) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime + delay);
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.3);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + delay);
-            osc.stop(audioCtx.currentTime + delay + 0.3);
-          });
+    // LÓGICA DO CRONÔMETRO ATUALIZADA PARA IPHONE
+    useEffect(() => {
+      if (!cronometroRodando) return;
+  
+      const limiteSegundos = tempoLimiteMinutos * 60;
+  
+      if (segundosCronometro >= limiteSegundos) {
+        setCronometroRodando(false);
+        
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            const audioCtx = new AudioContextClass();
+            
+            // Garante que o contexto de áudio não foi congelado pelo iOS de fundo
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+            }
+  
+            // Sequência de apitos (Som de "BIP! BIP!")
+            [0, 0.25].forEach((delay) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              
+              // Frequência do apito de juiz (agudo e estridente)
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(1000, audioCtx.currentTime + delay);
+              
+              gain.gain.setValueAtTime(0.8, audioCtx.currentTime + delay);
+              gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
+              
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              
+              osc.start(audioCtx.currentTime + delay);
+              osc.stop(audioCtx.currentTime + delay + 0.2);
+            });
+          }
+        } catch (e) { 
+          console.log("Audio falhou no iOS", e); 
         }
-      } catch (e) { 
-        console.log("Audio falhou", e); 
+  
+        toast.success('⏱️ Fim de jogo! Tempo esgotado!', { duration: 5000 });
+        return;
       }
-
-      toast.success('⏱️ Fim de jogo! Tempo esgotado!', { duration: 5000 });
-      return;
-    }
-
-    const intervalo = setInterval(() => {
-      setSegundosCronometro((tempo) => tempo + 1);
-    }, 1000);
-
-    return () => clearInterval(intervalo);
-  }, [cronometroRodando, segundosCronometro, tempoLimiteMinutos]);
-
+  
+      const intervalo = setInterval(() => {
+        setSegundosCronometro((tempo) => tempo + 1);
+      }, 1000);
+  
+      return () => clearInterval(intervalo);
+    }, [cronometroRodando, segundosCronometro, tempoLimiteMinutos]);
+  
   const alternarCronometro = useCallback(() => {
+    // Força o desbloqueio do canal de áudio em dispositivos iOS/Safari
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        const audioCtx = new AudioContextClass();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        // Toca um micro-som imperceptível para abrir o canal de mídia do iPhone
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime); // Quase mudo
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.01);
       }
     } catch (e) { console.log(e); }
     
     setCronometroRodando(v => !v);
   }, []);
+
 
   const zerarCronometro = useCallback(() => { setCronometroRodando(false); setSegundosCronometro(0); }, [])
 

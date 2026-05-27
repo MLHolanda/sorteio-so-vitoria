@@ -52,6 +52,7 @@ function App() {
   })
 
   const [novoNome, setNovoNome] = useState('')
+  const [times, setTimes] = useState([])
   const [segundosCronometro, setSegundosCronometro] = useState(estadoInicialPartida.segundosCronometro)
   const [cronometroRodando, setCronometroRodando] = useState(false)
   const [timesSorteados, setTimesSorteados] = useState(estadoInicialPartida.timesSorteados)
@@ -160,6 +161,7 @@ function App() {
     setNovoNome('')
   }
 
+  
   const alternarPresenca = (id) => {
     setJogadores(lista => lista.map(j => j.id === id ? { ...j, selecionado: !j.selecionado } : j))
   }
@@ -293,7 +295,7 @@ function App() {
         <section className="card cadastro-card">
           <div className="input-group">
             <input type="text" value={novoNome} onChange={e => setNovoNome(e.target.value)} onKeyDown={e => e.key === 'Enter' && adicionarJogador()} placeholder="Nome do jogador" />
-            <button className="btn success" onClick={adicionarJogador}>Add</button>
+            <button className="btn-add" onClick={adicionarJogador}> + </button>
           </div>
         </section>
 
@@ -315,7 +317,7 @@ function App() {
               <div 
                 key={j.id} 
                 className={`player-card-wrapper ${j.selecionado ? 'custom-selecionado' : ''}`}
-                style={j.selecionado ? { background: '#10b981', borderRadius: '12px', padding: '3px', transition: 'all 0.2s ease' } : {}}
+                
               >
                 <PlayerCard 
                   jogador={j} 

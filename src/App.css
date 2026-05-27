@@ -210,3 +210,91 @@ body {
   margin-left: 10px;
   cursor: pointer;
 }
+/* PLAYER CARD NOVO */
+
+.wrapper-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-inativo,
+.card-ativo {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-inativo {
+  background: #151C2E;
+  color: #F0F3FA;
+}
+
+.card-inativo:hover {
+  background: #1c2740;
+}
+
+.card-ativo {
+  background: #00725F;
+  color: white;
+  box-shadow: 0 0 12px rgba(0, 114, 95, 0.35);
+}
+
+.acoes-player {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-edit {
+  background: #0466C8;
+  color: white;
+}
+
+.btn-edit:hover {
+  transform: scale(1.05);
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete:hover {
+  transform: scale(1.05);
+}
+.btn-add {
+  width: 60px;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}

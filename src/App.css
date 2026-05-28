@@ -293,6 +293,21 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto;
+  width: 600px;
+}
+
+.input-group input {
+  flex: 1;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 20px;
+  padding: 0 14px;
+}
 
 .btn-add:hover {
   transform: scale(1.05);

@@ -313,7 +313,9 @@ function App() {
           </div>
 
           <div className="lista-banco">
-            {jogadores.map((j) => (
+            {jogadores
+              .sort((a, b) => a.nome.localeCompare(b.nome))
+              .map((j) => (
               <div 
                 key={j.id} 
                 className={`player-card-wrapper ${j.selecionado ? 'custom-selecionado' : ''}`}
